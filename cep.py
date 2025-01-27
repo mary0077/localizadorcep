@@ -1,7 +1,9 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import requests
 
 app = Flask(__name__)
+CORS(app)  # Permitir requisições do frontend
 
 def consultar_cep(cep: str):
     url = f'https://viacep.com.br/ws/{cep}/json/'
@@ -12,7 +14,8 @@ def consultar_cep(cep: str):
         if 'erro' in data:
             return None
         return data
-    except requests.RequestException:
+    except requests.RequestException as e:
+        print(f"Erro ao consultar a API ViaCEP: {e}")
         return None
 
 @app.route('/api/consultar-cep', methods=['POST'])

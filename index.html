@@ -11,7 +11,7 @@
             resultado.innerHTML = '';
 
             // Validação do CEP
-            const cep = cepInput.replace(/\D/g, '');
+            const cep = cepInput.replace(/\D/g, ''); // Remove caracteres não numéricos
             if (cep.length !== 8) {
                 resultado.innerHTML = '<p style="color: red;">CEP inválido. Certifique-se de que o CEP tenha 8 dígitos.</p>';
                 return;
@@ -47,6 +47,11 @@
                 console.error('Erro:', error);
             }
         }
+
+        function limparCampos() {
+            document.getElementById('cep').value = '';
+            document.getElementById('resultado').innerHTML = '';
+        }
     </script>
 </head>
 <body>
@@ -55,6 +60,7 @@
         <p>Digite um CEP válido para consultar as informações do endereço:</p>
         <input type="text" id="cep" placeholder="Digite o CEP" maxlength="9" style="padding: 10px; width: 100%; box-sizing: border-box;">
         <button onclick="consultarCEP()" style="margin-top: 10px; padding: 10px; width: 100%; background-color: #007BFF; color: white; border: none; cursor: pointer;">Consultar</button>
+        <button onclick="limparCampos()" style="margin-top: 10px; padding: 10px; width: 100%; background-color: #6c757d; color: white; border: none; cursor: pointer;">Limpar</button>
         <div id="resultado" style="margin-top: 20px;"></div>
     </div>
 </body>

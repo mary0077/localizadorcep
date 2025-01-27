@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta de CEP</title>
+    <script>
+        async function consultarCEP() {
+            const cepInput = document.getElementById('cep').value;
+            const resultado = document.getElementById('resultado');
+            resultado.innerHTML = '';
+
+            // Validação do CEP
+            const cep = cepInput.replace(/\D/g, '');
+            if (cep.length !== 8) {
+                resultado.innerHTML = '<p style="color: red;">CEP inválido. Certifique-se de que o CEP tenha 8 dígitos.</p>';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/consultar-cep', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ cep }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Erro ao consultar o backend.');
+                }
+
+                const data = await response.json();
+                if (data.erro) {
+                    resultado.innerHTML = `<p style="color: red;">Não foi possível localizar informações para o CEP ${cep}.</p>`;
+                } else {
+                    resultado.innerHTML = `
+                        <h3>Endereço encontrado:</h3>
+                        <p><strong>Logradouro:</strong> ${data.logradouro || 'Não informado'}</p>
+                        <p><strong>Bairro:</strong> ${data.bairro || 'Não informado'}</p>
+                        <p><strong>Cidade:</strong> ${data.localidade || 'Não informado'}</p>
+                        <p><strong>Estado:</strong> ${data.uf || 'Não informado'}</p>
+                    `;
+                }
+            } catch (error) {
+                resultado.innerHTML = '<p style="color: red;">Erro ao consultar o backend. Tente novamente mais tarde.</p>';
+                console.error('Erro:', error);
+            }
+        }
+    </script>
+</head>
+<body>
+    <div style="max-width: 600px; margin: 50px auto; font-family: Arial, sans-serif;">
+        <h1>Consulta de CEP</h1>
+        <p>Digite um CEP válido para consultar as informações do endereço:</p>
+        <input type="text" id="cep" placeholder="Digite o CEP" maxlength="9" style="padding: 10px; width: 100%; box-sizing: border-box;">
+        <button onclick="consultarCEP()" style="margin-top: 10px; padding: 10px; width: 100%; background-color: #007BFF; color: white; border: none; cursor: pointer;">Consultar</button>
+        <div id="resultado" style="margin-top: 20px;"></div>
+    </div>
+</body>
+</html>

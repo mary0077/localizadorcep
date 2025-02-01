@@ -4,78 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consulta de CEP</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 50px auto;
-            text-align: center;
-        }
-        input {
-            padding: 10px;
-            width: 100%;
-            box-sizing: border-box;
-            margin-bottom: 10px;
-            text-align: center;
-            font-size: 16px;
-        }
-        button {
-            padding: 10px;
-            width: 100%;
-            cursor: pointer;
-            font-size: 16px;
-            border: none;
-            color: white;
-        }
-        .btn-consultar {
-            background-color: #007BFF;
-        }
-        .btn-limpar {
-            background-color: #6c757d;
-        }
-        #resultado {
-            margin-top: 20px;
-            font-size: 18px;
-        }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
         async function consultarCEP() {
             const cepInput = document.getElementById('cep');
-            let cep = cepInput.value.replace(/\D/g, ''); // Remove caracteres não numéricos
+            let cep = cepInput.value.replace(/\D/g, ''); 
             const resultado = document.getElementById('resultado');
 
-            resultado.innerHTML = '<p style="color: blue;">Consultando...</p>';
+            resultado.innerHTML = '<p class="text-blue-500">Consultando...</p>';
 
             if (cep.length !== 8) {
-                resultado.innerHTML = '<p style="color: red;">CEP inválido. Digite um CEP com 8 dígitos.</p>';
+                resultado.innerHTML = '<p class="text-red-500">CEP inválido. Digite um CEP com 8 dígitos.</p>';
                 return;
             }
 
             try {
                 const response = await fetch('http://127.0.0.1:8013/api/consultar-cep', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ cep }),
                 });
 
                 const data = await response.json();
                 
                 if (response.status !== 200) {
-                    resultado.innerHTML = `<p style="color: red;">${data.erro}</p>`;
+                    resultado.innerHTML = `<p class="text-red-500">${data.erro}</p>`;
                     return;
                 }
 
                 resultado.innerHTML = `
-                    <h3>Endereço encontrado:</h3>
-                    <p><strong>Logradouro:</strong> ${data.logradouro || 'Não informado'}</p>
-                    <p><strong>Bairro:</strong> ${data.bairro || 'Não informado'}</p>
-                    <p><strong>Cidade:</strong> ${data.localidade || 'Não informado'}</p>
-                    <p><strong>Estado:</strong> ${data.uf || 'Não informado'}</p>
+                    <div class="bg-gray-100 p-4 rounded-lg shadow-md">
+                        <h3 class="text-lg font-semibold">Endereço encontrado:</h3>
+                        <p><strong>Logradouro:</strong> ${data.logradouro || 'Não informado'}</p>
+                        <p><strong>Bairro:</strong> ${data.bairro || 'Não informado'}</p>
+                        <p><strong>Cidade:</strong> ${data.localidade || 'Não informado'}</p>
+                        <p><strong>Estado:</strong> ${data.uf || 'Não informado'}</p>
+                    </div>
                 `;
             } catch (error) {
-                resultado.innerHTML = '<p style="color: red;">Erro ao consultar o backend. Tente novamente.</p>';
+                resultado.innerHTML = '<p class="text-red-500">Erro ao consultar o backend. Tente novamente.</p>';
             }
         }
 
@@ -85,11 +52,13 @@
         }
     </script>
 </head>
-<body>
-    <h1>Consulta de CEP</h1>
-    <input type="text" id="cep" placeholder="Digite o CEP (Ex: 12345-678)" maxlength="9">
-    <button class="btn-consultar" onclick="consultarCEP()">Consultar</button>
-    <button class="btn-limpar" onclick="limparCampos()">Limpar</button>
-    <div id="resultado"></div>
+<body class="bg-gray-200 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
+        <h1 class="text-2xl font-bold mb-4">Consulta de CEP</h1>
+        <input type="text" id="cep" class="w-full p-3 border rounded-lg text-center text-lg mb-4" placeholder="Digite o CEP (Ex: 12345-678)" maxlength="9">
+        <button class="w-full bg-blue-500 text-white p-3 rounded-lg font-semibold mb-2 hover:bg-blue-600" onclick="consultarCEP()">Consultar</button>
+        <button class="w-full bg-gray-500 text-white p-3 rounded-lg font-semibold hover:bg-gray-600" onclick="limparCampos()">Limpar</button>
+        <div id="resultado" class="mt-4"></div>
+    </div>
 </body>
 </html>

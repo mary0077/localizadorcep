@@ -20,6 +20,11 @@
             document.getElementById("historico").innerHTML = lista;
         }
 
+        function limparHistorico() {
+            localStorage.removeItem("historicoCEPs");  
+            document.getElementById("historico").innerHTML = "";  
+        }
+
         async function consultarCEP() {
             const cepInput = document.getElementById('cep');
             let cep = cepInput.value.replace(/\D/g, '');
@@ -66,7 +71,7 @@
 </head>
 <body class="bg-gradient-to-r from-blue-500 to-teal-400 flex items-center justify-center min-h-screen">
     <div class="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
-        <h1 class="text-2xl font-bold mb-4">Consulta de CEP</h1>
+        <h1 class="text-2xl font-bold mb-4" style="font-family: 'Poppins', sans-serif;">Consulta de CEP</h1>
         <input type="text" id="cep" class="w-full p-3 border rounded-lg text-center text-lg mb-4" placeholder="Digite o CEP (Ex: 12345-678)" maxlength="9">
         <button class="w-full bg-blue-500 text-white p-3 rounded-lg font-semibold mb-2 hover:bg-blue-600" onclick="consultarCEP()">Consultar</button>
         <button class="w-full bg-gray-500 text-white p-3 rounded-lg font-semibold hover:bg-gray-600" onclick="document.getElementById('cep').value=''; document.getElementById('resultado').innerHTML='';">Limpar</button>
@@ -74,6 +79,7 @@
         <div class="mt-4">
             <h2 class="text-lg font-semibold">Histórico de Consultas</h2>
             <ul id="historico" class="text-left text-sm mt-2"></ul>
+            <button class="w-full bg-red-500 text-white p-3 rounded-lg font-semibold hover:bg-red-600 mt-2" onclick="limparHistorico()">Limpar Histórico</button>
         </div>
     </div>
 </body>

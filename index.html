@@ -6,15 +6,28 @@
     <title>Consulta de CEP</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
+        function salvarHistorico(cep, endereco) {
+            let historico = JSON.parse(localStorage.getItem("historicoCEPs")) || [];
+            historico.unshift({ cep, endereco });  
+            if (historico.length > 5) historico.pop();  
+            localStorage.setItem("historicoCEPs", JSON.stringify(historico));
+            exibirHistorico();
+        }
+
+        function exibirHistorico() {
+            let historico = JSON.parse(localStorage.getItem("historicoCEPs")) || [];
+            let lista = historico.map(item => `<li>${item.cep} - ${item.endereco}</li>`).join("");
+            document.getElementById("historico").innerHTML = lista;
+        }
+
         async function consultarCEP() {
             const cepInput = document.getElementById('cep');
-            let cep = cepInput.value.replace(/\D/g, ''); 
+            let cep = cepInput.value.replace(/\D/g, '');
             const resultado = document.getElementById('resultado');
-
-            resultado.innerHTML = '<p class="text-blue-500">Consultando...</p>';
+            resultado.innerHTML = '<p class="text-blue-500 animate-pulse">Consultando...</p>';
 
             if (cep.length !== 8) {
-                resultado.innerHTML = '<p class="text-red-500">CEP inválido. Digite um CEP com 8 dígitos.</p>';
+                resultado.innerHTML = '<p class="text-red-500">CEP inválido.</p>';
                 return;
             }
 
@@ -26,12 +39,13 @@
                 });
 
                 const data = await response.json();
-                
+
                 if (response.status !== 200) {
                     resultado.innerHTML = `<p class="text-red-500">${data.erro}</p>`;
                     return;
                 }
 
+                let endereco = `${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}`;
                 resultado.innerHTML = `
                     <div class="bg-gray-100 p-4 rounded-lg shadow-md">
                         <h3 class="text-lg font-semibold">Endereço encontrado:</h3>
@@ -41,15 +55,13 @@
                         <p><strong>Estado:</strong> ${data.uf || 'Não informado'}</p>
                     </div>
                 `;
+                salvarHistorico(cep, endereco);
             } catch (error) {
-                resultado.innerHTML = '<p class="text-red-500">Erro ao consultar o backend. Tente novamente.</p>';
+                resultado.innerHTML = '<p class="text-red-500">Erro ao consultar o backend.</p>';
             }
         }
 
-        function limparCampos() {
-            document.getElementById('cep').value = '';
-            document.getElementById('resultado').innerHTML = '';
-        }
+        document.addEventListener("DOMContentLoaded", exibirHistorico);
     </script>
 </head>
 <body class="bg-gradient-to-r from-blue-500 to-teal-400 flex items-center justify-center min-h-screen">
@@ -57,8 +69,12 @@
         <h1 class="text-2xl font-bold mb-4">Consulta de CEP</h1>
         <input type="text" id="cep" class="w-full p-3 border rounded-lg text-center text-lg mb-4" placeholder="Digite o CEP (Ex: 12345-678)" maxlength="9">
         <button class="w-full bg-blue-500 text-white p-3 rounded-lg font-semibold mb-2 hover:bg-blue-600" onclick="consultarCEP()">Consultar</button>
-        <button class="w-full bg-gray-500 text-white p-3 rounded-lg font-semibold hover:bg-gray-600" onclick="limparCampos()">Limpar</button>
+        <button class="w-full bg-gray-500 text-white p-3 rounded-lg font-semibold hover:bg-gray-600" onclick="document.getElementById('cep').value=''; document.getElementById('resultado').innerHTML='';">Limpar</button>
         <div id="resultado" class="mt-4"></div>
+        <div class="mt-4">
+            <h2 class="text-lg font-semibold">Histórico de Consultas</h2>
+            <ul id="historico" class="text-left text-sm mt-2"></ul>
+        </div>
     </div>
 </body>
 </html>

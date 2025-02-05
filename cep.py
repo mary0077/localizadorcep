@@ -1,33 +1,39 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
+import sqlite3
 import logging
 
 app = Flask(__name__)
-CORS(app)  # Permite requisições do frontend
+CORS(app)
 
-# Configurando o log para registrar erros
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Cache para armazenar resultados recentes
-cache = {}
+# Configuração do Banco de Dados
+def init_db():
+    with sqlite3.connect("ceps.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute('''CREATE TABLE IF NOT EXISTS historico (id INTEGER PRIMARY KEY, cep TEXT, endereco TEXT)''')
+        conn.commit()
+
+init_db()
+
+def salvar_no_banco(cep, endereco):
+    with sqlite3.connect("ceps.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO historico (cep, endereco) VALUES (?, ?)", (cep, endereco))
+        conn.commit()
 
 def consultar_cep(cep: str):
-    """Consulta o CEP na API ViaCEP e usa cache para evitar requisições repetitivas."""
-    if cep in cache:
-        return cache[cep]
-    
     url = f'https://viacep.com.br/ws/{cep}/json/'
     try:
         response = requests.get(url, timeout=5)
         response.raise_for_status()
         data = response.json()
-        
         if 'erro' in data:
             return None
-        
-        # Armazena no cache por 10 minutos (simulação, pode usar Redis para mais eficiência)
-        cache[cep] = data
+        endereco = f"{data['logradouro']}, {data['bairro']}, {data['localidade']} - {data['uf']}"
+        salvar_no_banco(cep, endereco)
         return data
     except requests.RequestException as e:
         logging.error(f"Erro ao consultar API ViaCEP: {e}")
@@ -35,17 +41,12 @@ def consultar_cep(cep: str):
 
 @app.route('/api/consultar-cep', methods=['POST'])
 def api_consultar_cep():
-    """Endpoint para consultar CEP"""
     cep = request.json.get('cep', '').strip()
-
-    # Validação do CEP
     if not cep or len(cep) != 8 or not cep.isdigit():
         return jsonify({'erro': 'Formato de CEP inválido. Digite um CEP com 8 números.'}), 400
-
     endereco = consultar_cep(cep)
     if not endereco:
         return jsonify({'erro': 'CEP não encontrado.'}), 404
-
     return jsonify(endereco)
 
 if __name__ == "__main__":

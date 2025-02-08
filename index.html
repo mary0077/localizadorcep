@@ -5,30 +5,88 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consulta de CEP</title>
     <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-r from-blue-500 to-teal-400 flex items-center justify-center min-h-screen transition-colors" id="body">
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-96 text-center transition-colors">
+        <h1 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Consulta de CEP</h1>
+        <button id="toggleTheme" class="mb-4 p-2 bg-gray-300 dark:bg-gray-700 text-black dark:text-white rounded-lg">Alternar Tema</button>
+        <input type="text" id="cep" class="w-full p-3 border rounded-lg text-center text-lg mb-4 dark:bg-gray-700 dark:text-white" 
+            placeholder="Digite o CEP (Ex: 12345-678)" maxlength="9" oninput="validarEntrada(this)">
+        <button class="w-full bg-blue-500 text-white p-3 rounded-lg font-semibold mb-2 hover:bg-blue-600" onclick="consultarCEP()">Consultar</button>
+        <button class="w-full bg-gray-500 text-white p-3 rounded-lg font-semibold hover:bg-gray-600" onclick="limparCampos()">Limpar</button>
+        <div id="resultado" class="mt-4 text-gray-900 dark:text-white"></div>
+        <div class="mt-4">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Histórico de Consultas</h2>
+            <ul id="historico" class="text-left text-sm mt-2 text-gray-900 dark:text-white"></ul>
+            <button class="w-full bg-red-500 text-white p-3 rounded-lg font-semibold hover:bg-red-600 mt-2" onclick="limparHistorico()">Limpar Histórico</button>
+        </div>
+    </div>
+
     <script>
+        // Função para alternar entre os temas e salvar a preferência no localStorage
+        function toggleTheme() {
+            const body = document.getElementById("body");
+            body.classList.toggle("dark");
+            localStorage.setItem("theme", body.classList.contains("dark") ? "dark" : "light");
+        }
+
+        // Função para aplicar o tema salvo quando a página for carregada
+        function applyTheme() {
+            const theme = localStorage.getItem("theme");
+            const body = document.getElementById("body");
+            if (theme && theme === "dark") {
+                body.classList.add("dark");  // Aplica o tema armazenado (dark)
+            } else {
+                body.classList.remove("dark");  // Remove o tema claro, se necessário
+            }
+        }
+
+        // Ao clicar no botão, alterna entre os temas
+        document.getElementById("toggleTheme").addEventListener("click", toggleTheme);
+
+        // Aplica o tema salvo ao carregar a página
+        document.addEventListener("DOMContentLoaded", applyTheme);
+
+        // Função para salvar o histórico de CEPs no localStorage
         function salvarHistorico(cep, endereco) {
             let historico = JSON.parse(localStorage.getItem("historicoCEPs")) || [];
-            historico.unshift({ cep, endereco });  
-            if (historico.length > 5) historico.pop();  
+            historico.unshift({ cep, endereco });
+            historico = historico.slice(0, 5);  // Limita o histórico a 5 registros
             localStorage.setItem("historicoCEPs", JSON.stringify(historico));
             exibirHistorico();
         }
 
+        // Função para exibir o histórico de CEPs
         function exibirHistorico() {
             let historico = JSON.parse(localStorage.getItem("historicoCEPs")) || [];
-            let lista = historico.map(item => `<li>${item.cep} - ${item.endereco}</li>`).join("");
-            document.getElementById("historico").innerHTML = lista;
+            document.getElementById("historico").innerHTML = historico
+                .map(item => `<li>${item.cep} - ${item.endereco}</li>`)
+                .join("");
         }
 
+        // Função para limpar o histórico de CEPs
         function limparHistorico() {
-            localStorage.removeItem("historicoCEPs");  
-            document.getElementById("historico").innerHTML = "";  
+            localStorage.removeItem("historicoCEPs");
+            document.getElementById("historico").innerHTML = "";
         }
 
+        // Função para limpar os campos de input e resultado
+        function limparCampos() {
+            document.getElementById('cep').value = "";
+            document.getElementById('resultado').innerHTML = "";
+        }
+
+        // Função para validar a entrada do CEP
+        function validarEntrada(input) {
+            input.value = input.value.replace(/\D/g, '');  // Remove caracteres não numéricos
+        }
+
+        // Função para consultar o CEP
         async function consultarCEP() {
             const cepInput = document.getElementById('cep');
             let cep = cepInput.value.replace(/\D/g, '');
             const resultado = document.getElementById('resultado');
+
             resultado.innerHTML = '<p class="text-blue-500 animate-pulse">Consultando...</p>';
 
             if (cep.length !== 8) {
@@ -45,14 +103,14 @@
 
                 const data = await response.json();
 
-                if (response.status !== 200) {
+                if (!response.ok) {
                     resultado.innerHTML = `<p class="text-red-500">${data.erro}</p>`;
                     return;
                 }
 
-                let endereco = `${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}`;
+                let endereco = `${data.logradouro || 'Não informado'}, ${data.bairro || 'Não informado'}, ${data.localidade || 'Não informado'} - ${data.uf || 'Não informado'}`;
                 resultado.innerHTML = `
-                    <div class="bg-gray-100 p-4 rounded-lg shadow-md">
+                    <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg shadow-md">
                         <h3 class="text-lg font-semibold">Endereço encontrado:</h3>
                         <p><strong>Logradouro:</strong> ${data.logradouro || 'Não informado'}</p>
                         <p><strong>Bairro:</strong> ${data.bairro || 'Não informado'}</p>
@@ -66,21 +124,8 @@
             }
         }
 
+        // Exibe o histórico ao carregar a página
         document.addEventListener("DOMContentLoaded", exibirHistorico);
     </script>
-</head>
-<body class="bg-gradient-to-r from-blue-500 to-teal-400 flex items-center justify-center min-h-screen">
-    <div class="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
-        <h1 class="text-2xl font-bold mb-4" style="font-family: 'Poppins', sans-serif;">Consulta de CEP</h1>
-        <input type="text" id="cep" class="w-full p-3 border rounded-lg text-center text-lg mb-4" placeholder="Digite o CEP (Ex: 12345-678)" maxlength="9">
-        <button class="w-full bg-blue-500 text-white p-3 rounded-lg font-semibold mb-2 hover:bg-blue-600" onclick="consultarCEP()">Consultar</button>
-        <button class="w-full bg-gray-500 text-white p-3 rounded-lg font-semibold hover:bg-gray-600" onclick="document.getElementById('cep').value=''; document.getElementById('resultado').innerHTML='';">Limpar</button>
-        <div id="resultado" class="mt-4"></div>
-        <div class="mt-4">
-            <h2 class="text-lg font-semibold">Histórico de Consultas</h2>
-            <ul id="historico" class="text-left text-sm mt-2"></ul>
-            <button class="w-full bg-red-500 text-white p-3 rounded-lg font-semibold hover:bg-red-600 mt-2" onclick="limparHistorico()">Limpar Histórico</button>
-        </div>
-    </div>
 </body>
 </html>

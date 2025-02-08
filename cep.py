@@ -9,7 +9,6 @@ CORS(app)
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Configuração do Banco de Dados
 def init_db():
     with sqlite3.connect("ceps.db") as conn:
         cursor = conn.cursor()
@@ -48,6 +47,14 @@ def api_consultar_cep():
     if not endereco:
         return jsonify({'erro': 'CEP não encontrado.'}), 404
     return jsonify(endereco)
+
+@app.route('/api/historico', methods=['GET'])
+def obter_historico():
+    with sqlite3.connect("ceps.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT cep, endereco FROM historico ORDER BY id DESC LIMIT 5")
+        historico = [{'cep': row[0], 'endereco': row[1]} for row in cursor.fetchall()]
+    return jsonify(historico)
 
 if __name__ == "__main__":
     app.run(debug=True, port=8013)
